@@ -1,0 +1,6 @@
+<div id="modal" class="imc-wrapper hide">
+        <div style="position: absolute; top: 0; right: 0;">
+            <button  class="fecha" id ="close-modal"onclick="fecharModal()"><span>X</span></button>
+        </div>
+        <p>Seu IMC é de <span id="resultado-modal"></span></p>
+    </div>

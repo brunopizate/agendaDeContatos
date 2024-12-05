@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gerenciador de Contatos</title>
+    <style>
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        table, th, td {
+            border: 1px solid black;
+        }
+        th, td {
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        .icon {
+            cursor: pointer;
+            margin: 0 5px;
+        }
+        .header {
+            display: flex;
+            justify-content: flex-end;
+            padding: 10px;
+        }
+        .profile-icon {
+            cursor: pointer;
+        }
+        #add-contact-form {
+            display: none;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <img src="profile-icon.png" alt="Perfil" class="profile-icon" onclick="logout()">
+    </div>
+    <h1>Lista de Contatos</h1>
+    <button id="show-add-contact-form">Adicionar Contato</button>
+    <form id="add-contact-form">
+        <input type="text" id="name" placeholder="Nome" required>
+        <input type="text" id="phone" placeholder="Telefone" required>
+        <input type="email" id="email" placeholder="Email" required>
+        <button type="submit">Adicionar Contato</button>
+    </form>
+    <table>
+        <thead>
+            <tr>
+                <th>Nome</th>
+                <th>Telefone</th>
+                <th>Email</th>
+                <th>Ações</th>
+            </tr>
+        </thead>
+        <tbody id="contact-list">
+            <!-- Lista de contatos será inserida aqui -->
+        </tbody>
+    </table>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', loadContacts);
+        document.getElementById('show-add-contact-form').addEventListener('click', function() {
+            document.getElementById('add-contact-form').style.display = 'block';
+        });
+        document.getElementById('add-contact-form').addEventListener('submit', addContact);
+
+        function loadContacts() {
+            fetch('/api/contacts')
+                .then(response => response.json())
+                .then(data => {
+                    const contactList = document.getElementById('contact-list');
+                    contactList.innerHTML = '';
+                    data.forEach(contact => {
+                        const row = document.createElement('tr');
+                        row.innerHTML = `
+                            <td>${contact.name}</td>
+                            <td>${contact.phoneNumber}</td>
+                            <td>${contact.email}</td>
+                            <td>
+                                <span class="icon" onclick="viewContact('${contact.name}')">👁️</span>
+                                <span class="icon" onclick="editContact('${contact.name}')">✏️</span>
+                                <span class="icon" onclick="removeContact('${contact.name}')">🗑️</span>
+                            </td>
+                        `;
+                        contactList.appendChild(row);
+                    });
+                });
+        }
+
+        function addContact(event) {
+            event.preventDefault();
+            const name = document.getElementById('name').value;
+            const phone = document.getElementById('phone').value;
+            const email = document.getElementById('email').value;
+
+            fetch('/api/contacts', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ name, phoneNumber: phone, email })
+            })
+            .then(response => response.json())
+            .then(() => {
+                loadContacts();
+                document.getElementById('add-contact-form').reset();
+                document.getElementById('add-contact-form').style.display = 'none';
+            });
+        }
+
+        function editContact(name) {
+            const newPhoneNumber = prompt('Novo Telefone:');
+            const newEmail = prompt('Novo Email:');
+            if (newPhoneNumber && newEmail) {
+                fetch(`/api/contacts/${name}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ phoneNumber: newPhoneNumber, email: newEmail })
+                })
+                .then(response => response.json())
+                .then(() => loadContacts());
+            }
+        }
+
+        function removeContact(name) {
+            if (confirm('Tem certeza que deseja remover o contato ' + name + '?')) {
+                fetch(`/api/contacts/${name}`, { method: 'DELETE' })
+                .then(() => loadContacts());
+            }
+        }
+
+        function viewContact(name) {
+            alert('Visualizando contato: ' + name);
+        }
+
+        function logout() {
+            alert('Deslogando...');
+            // Adicione aqui a lógica para deslogar
+
+        }
+    </script>
+</body>
+</html>
+
+
